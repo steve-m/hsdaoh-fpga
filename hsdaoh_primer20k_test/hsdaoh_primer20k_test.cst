@@ -1,0 +1,13 @@
+IO_LOC "sys_resetn" T10;
+IO_PORT "sys_resetn" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "sys_clk" H11;
+//IO_PORT "sys_clk" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "sys_clk" PULL_MODE=UP;
+IO_LOC "tmds_d_p[0]" H14,H16;
+IO_PORT "tmds_d_p[0]" PULL_MODE=NONE DRIVE=8;
+IO_LOC "tmds_d_p[1]" J15,K16;
+IO_PORT "tmds_d_p[1]" PULL_MODE=NONE DRIVE=8;
+IO_LOC "tmds_d_p[2]" K14,K15;
+IO_PORT "tmds_d_p[2]" PULL_MODE=NONE DRIVE=8;
+IO_LOC "tmds_clk_p" G16,H15;
+IO_PORT "tmds_clk_p" PULL_MODE=NONE DRIVE=8;
