@@ -21,3 +21,7 @@ Here is an example commandline for loading the bitfile on a Tang Nano 20K:
 ## Testing the design
 
 After loading the bitfile, connect the FPGA board to a MS2130 HDMI grabber and confirm that the video output is working. You then can use hsdaoh_test to verify the counter values.
+
+## Credits
+
+The hsdaoh FPGA design was developed by Steve Markgraf, and is heavily based on the [HDMI IP core](https://github.com/hdl-util/hdmi) by Sameer Puri and also uses the [asynchronous FIFO](https://github.com/dpretet/async_fifo) by Damien Pretet.
