@@ -14,8 +14,9 @@ module hsdaoh_core
 	input wire clk_pixel,
 	input wire fifo_empty,
 	input wire fifo_aempty,
-	output reg fifo_read_en,
-	input wire [15:0] data_in
+	output wire fifo_read_en,
+	input wire [19:0] data_in,
+	input wire tenbit_enable_in
 );
 
 	localparam [31:0] MAGIC = 32'hda7acab1;
@@ -25,6 +26,11 @@ module hsdaoh_core
 	reg [15:0] idle_counter = 16'h0000;
 	reg [15:0] line_word_cnt = 16'h00;
 	reg [3:0] status_nibble = 4'h0;
+	reg read_en;
+	reg [2:0] pack_state;
+	reg [3:0] pack_sequence_start;
+	reg [15:0] tenbit_data;
+	reg tenbit_enabled = 1'b1;
 
 	wire [11:0] cx;
 	wire [10:0] cy;
@@ -33,6 +39,9 @@ module hsdaoh_core
 	wire [11:0] screen_width;
 	wire [10:0] screen_height;
 
+	// For 10 bit mode, disable FIFO every four 20 bit words so we can pack them to 16 bit
+	assign fifo_read_en = read_en && ((pack_state != 3) || !tenbit_enabled);
+
 always @(posedge clk_pixel) begin
 
 	if ((cx == screen_width-1) && (cy < screen_height)) begin
@@ -40,9 +49,43 @@ always @(posedge clk_pixel) begin
 		hdmi_data <= {status_nibble[3:0], line_word_cnt[11:0], 8'h00};
 
 	end else if ((cx < screen_width) && (cy < screen_height)) begin
-		if (fifo_read_en && !fifo_empty) begin
-		// regular output of FIFO data
-		hdmi_data <= {data_in[15:0], 8'h00};
+		if (read_en && !fifo_empty) begin
+
+			// regular output of FIFO data
+			hdmi_data <= (tenbit_enabled && (pack_state == 4)) ? {tenbit_data[15:0], 8'h00} : {data_in[19:12], data_in[9:2], 8'h00};
+
+			if (tenbit_enabled) begin
+				// for 10 bit IQ samples, we need to pack them
+				case (pack_state)
+				0:
+					begin
+						tenbit_data[3:0] <= {data_in[1:0], data_in[11:10]};
+						pack_state <= 1;
+					end
+				1:
+					begin
+						tenbit_data[7:4] <= {data_in[1:0], data_in[11:10]};
+						pack_state <= 2;
+					end
+				2:
+					begin
+						tenbit_data[11:8] <= {data_in[1:0], data_in[11:10]};
+						pack_state <= 3;
+					end
+				3:
+					begin
+						tenbit_data[15:12] <= {data_in[1:0], data_in[11:10]};
+						pack_state <= 4;
+					end
+				4:
+					begin
+						pack_state <= 0;
+					end
+				default:
+					pack_state <= 0;
+				endcase
+			end
+
 
 		// increment line payload counter
 		line_word_cnt <= line_word_cnt + 1'b1;
@@ -59,29 +102,42 @@ always @(posedge clk_pixel) begin
 
 	// Enable reading before beginning of next line
 	if ((cx == frame_width-1) && (cy < screen_height-1) && !fifo_empty)
-		fifo_read_en = 1'b1;
+		read_en = 1'b1;
 
 	// switch read off during blanking
 	if (cy > screen_height)
-		fifo_read_en = 1'b0;
+		read_en = 1'b0;
 
 	// switch read off at end of line before sending the word counter
 	// -2 because the last word is reserved (line_word_cnt and metadata)
 	if ((cx == screen_width-2) && (cy < screen_height))
-		fifo_read_en = 1'b0;
+		read_en = 1'b0;
 
 	// switch read off when FIFO has only one word remaining
 	if (fifo_aempty)
-		fifo_read_en = 1'b0;
+		read_en = 1'b0;
+
+	// in order to align the packed data, stop the FIFO readout if we cannot complete a packing cycle
+	// at the end of the frame. This ensures that each frame starts with pack_state 0
+	// FIXME: only done at beginning of last line, should be removed
+	if (tenbit_enabled && (cy == screen_height-1)  && read_en) begin
+		if (pack_state == 4)
+			read_en = 1'b0;
+	end
 
 	// increment the frame counter at the end of the frame
 	if ((cx == frame_width-1) && (cy == frame_height-1)) begin
 		frame_cnt <= frame_cnt + 1'b1;
 		line_word_cnt <= 16'h0000;
+		// latch the current state of the pack sequence for the beginning of the next frame,
+		// which we transfer in the metadata so the host knows how to unpack the data
+		pack_sequence_start <= pack_state;
+		pack_state <= 0;
+		tenbit_enabled <= tenbit_enable_in;
 
 		// start FIFO readout
 		if (!fifo_empty)
-		fifo_read_en = 1'b1;
+			read_en = 1'b1;
 	end
 
 	if (cx == 0) begin
@@ -98,6 +154,8 @@ always @(posedge clk_pixel) begin
 			9  : status_nibble <= frame_cnt[7:4];
 			10 : status_nibble <= frame_cnt[11:8];
 			11 : status_nibble <= frame_cnt[15:12];
+			12 : status_nibble <= pack_sequence_start;
+			13 : status_nibble <= {3'b000, tenbit_enabled};
 			default : status_nibble <= 4'h0;
 		endcase
 	end
