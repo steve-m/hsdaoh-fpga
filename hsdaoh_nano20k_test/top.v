@@ -6,7 +6,6 @@
 module top (
 	sys_clk,
 	sys_resetn,
-	enable,
 	tmds_clk_n,
 	tmds_clk_p,
 	tmds_d_n,
@@ -14,7 +13,6 @@ module top (
 );
 	input sys_clk;
 	input sys_resetn;
-	input wire enable;
 	output wire tmds_clk_n;
 	output wire tmds_clk_p;
 	output wire [2:0] tmds_d_n;
