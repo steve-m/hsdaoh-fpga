@@ -41,19 +41,18 @@ always @(posedge clk_pixel) begin
 
 	end else if ((cx < screen_width) && (cy < screen_height)) begin
 		if (fifo_read_en && !fifo_empty) begin
-		// regular output of FIFO data
-		hdmi_data <= {data_in[15:0], 8'h00};
+			// regular output of FIFO data
+			hdmi_data <= {data_in[15:0], 8'h00};
 
-		// increment line payload counter
-		line_word_cnt <= line_word_cnt + 1'b1;
-	end else begin
-		// output idle counter
-		hdmi_data <= {idle_counter[15:8], idle_counter[7:0], 8'h00};
+			// increment line payload counter
+			line_word_cnt <= line_word_cnt + 1'b1;
+		end else begin
+			// output idle counter
+			hdmi_data <= {idle_counter[15:8], idle_counter[7:0], 8'h00};
 
-		// increment idle counter
-		idle_counter <= idle_counter + 1'b1;
-	end
-
+			// increment idle counter
+			idle_counter <= idle_counter + 1'b1;
+		end
 	end else
 		line_word_cnt <= 16'h0000;
 
@@ -81,7 +80,7 @@ always @(posedge clk_pixel) begin
 
 		// start FIFO readout
 		if (!fifo_empty)
-		fifo_read_en = 1'b1;
+			fifo_read_en = 1'b1;
 	end
 
 	if (cx == 0) begin
