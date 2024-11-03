@@ -1,0 +1,26 @@
+<?xml version="1" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+    <Template>FPGA</Template>
+    <Version>5</Version>
+    <Device name="GW1NR-9C" pn="GW1NR-LV9QN88PC6/I5">gw1nr9c-004</Device>
+    <FileList>
+        <File path="common/async_fifo/async_fifo.v" type="file.verilog" enable="1"/>
+        <File path="common/async_fifo/fifomem.v" type="file.verilog" enable="1"/>
+        <File path="common/async_fifo/rptr_empty.v" type="file.verilog" enable="1"/>
+        <File path="common/async_fifo/sync_r2w.v" type="file.verilog" enable="1"/>
+        <File path="common/async_fifo/sync_w2r.v" type="file.verilog" enable="1"/>
+        <File path="common/async_fifo/wptr_full.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/auxiliary_video_information_info_frame.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/hdmi.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/packet_assembler.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/packet_picker.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/serializer.v" type="file.verilog" enable="1"/>
+        <File path="common/hdmi/tmds_channel.v" type="file.verilog" enable="1"/>
+        <File path="common/hsdaoh/hsdaoh_core.v" type="file.verilog" enable="1"/>
+        <File path="hsdaoh_nano9k_test/fifo_hs/fifo_hs.v" type="file.verilog" enable="1"/>
+        <File path="hsdaoh_nano9k_test/top.v" type="file.verilog" enable="1"/>
+        <File path="hsdaoh_nano9k_test/hsdaoh_nano9k_test.cst" type="file.cst" enable="1"/>
+        <File path="hsdaoh_nano9k_test/hsdaoh_nano9k_test.sdc" type="file.sdc" enable="1"/>
+    </FileList>
+</Project>
