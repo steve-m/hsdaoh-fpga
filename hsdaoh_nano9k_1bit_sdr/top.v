@@ -30,6 +30,8 @@ module top (
 	wire clk_data;
 	wire clk_data_div;
     wire rf_in_1bit;
+    wire rf_in_1bit_q0;
+    wire rf_in_1bit_q1;
 	wire data_pll_lock;
 
 	// https://juj.github.io/gowin_fpga_code_generators/pll_calculator.html
@@ -184,10 +186,15 @@ module top (
             accumulator <= rf_in_1bit;
             fifo_in <= accumulator;
         end else begin
-            accumulator <= accumulator + rf_in_1bit;
+            accumulator <= accumulator + rf_in_1bit_q0 + rf_in_1bit_q1;
         end
 	end
-
+    IDDR uut(
+        .Q0(rf_in_1bit_q0),
+        .Q1(rf_in_1bit_q1),
+        .D(rf_in_1bit),
+        .CLK(clk_data)
+    );
 	TLVDS_IBUF rf_in (
 		.I(rf_in_n),
 		.IB(rf_in_p),
