@@ -10,8 +10,8 @@ module top (
 	tmds_clk_p,
 	tmds_d_n,
 	tmds_d_p,
-    rf_in_n,
-    rf_in_p
+	rf_in_n,
+	rf_in_p
 );
 	input sys_clk;
 	input sys_resetn;
@@ -19,8 +19,8 @@ module top (
 	output wire tmds_clk_p;
 	output wire [2:0] tmds_d_n;
 	output wire [2:0] tmds_d_p;
-    input wire rf_in_n;
-    input wire rf_in_p;
+	input wire rf_in_n;
+	input wire rf_in_p;
 
 	wire [2:0] tmds;
 	wire clk_pixel;
@@ -29,9 +29,9 @@ module top (
 
 	wire clk_data;
 	wire clk_data_div;
-    wire rf_in_1bit;
-    wire rf_in_1bit_q0;
-    wire rf_in_1bit_q1;
+	wire rf_in_1bit;
+	wire rf_in_1bit_q0;
+	wire rf_in_1bit_q1;
 	wire data_pll_lock;
 
 	// https://juj.github.io/gowin_fpga_code_generators/pll_calculator.html
@@ -177,24 +177,25 @@ module top (
 		.fifo_read_en(fifo_rd_en_i),
 		.data_in(fifo_out)
 	);
-    
-    assign write_enable = 1'b1;
+	
+	assign write_enable = 1'b1;
 
 	always @(posedge clk_data) begin
 		counter <= counter + 1'b1;
-        if (counter == 0) begin
-            accumulator <= rf_in_1bit;
-            fifo_in <= accumulator;
-        end else begin
-            accumulator <= accumulator + rf_in_1bit_q0 + rf_in_1bit_q1;
-        end
+		if (counter == 0) begin
+			accumulator <= rf_in_1bit;
+			fifo_in <= accumulator;
+		end else begin
+			accumulator <= accumulator + rf_in_1bit_q0 + rf_in_1bit_q1;
+		end
 	end
-    IDDR uut(
-        .Q0(rf_in_1bit_q0),
-        .Q1(rf_in_1bit_q1),
-        .D(rf_in_1bit),
-        .CLK(clk_data)
-    );
+	
+	IDDR rf_ddr (
+		.Q0(rf_in_1bit_q0),
+		.Q1(rf_in_1bit_q1),
+		.D(rf_in_1bit),
+		.CLK(clk_data)
+	);
 	TLVDS_IBUF rf_in (
 		.I(rf_in_n),
 		.IB(rf_in_p),
