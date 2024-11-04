@@ -183,7 +183,7 @@ module top (
 	always @(posedge clk_data) begin
 		counter <= counter + 1'b1;
 		if (counter == 0) begin
-			accumulator <= rf_in_1bit;
+			accumulator <= rf_in_1bit_q0 + rf_in_1bit_q1;
 			fifo_in <= accumulator;
 		end else begin
 			accumulator <= accumulator + rf_in_1bit_q0 + rf_in_1bit_q1;
