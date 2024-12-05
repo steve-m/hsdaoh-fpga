@@ -17,6 +17,7 @@
         <File path="common/hdmi/packet_picker.v" type="file.verilog" enable="1"/>
         <File path="common/hdmi/serializer.v" type="file.verilog" enable="1"/>
         <File path="common/hdmi/tmds_channel.v" type="file.verilog" enable="1"/>
+        <File path="common/hsdaoh/crc16_ccitt.v" type="file.verilog" enable="1"/>
         <File path="common/hsdaoh/hsdaoh_core.v" type="file.verilog" enable="1"/>
         <File path="hsdaoh_nano4k_test/fifo_hs/fifo_hs.v" type="file.verilog" enable="1"/>
         <File path="hsdaoh_nano4k_test/top.v" type="file.verilog" enable="1"/>
