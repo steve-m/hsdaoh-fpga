@@ -258,19 +258,14 @@ module hdmi (
 				end
 		end
 		else begin : genblk2  // DVI_OUTPUT = 1
-			reg video_guard = 1;
-			reg video_preamble = 0;
 			always @(posedge clk_pixel)
 				if (reset) begin
-					video_guard <= 1;
 					mode <= 3'd0;
 					video_data <= 24'd0;
 					control_data <= 6'd0;
 				end
 				else begin
-					video_guard <= ((cx >= (frame_width - 2)) && (cx < frame_width)) && ((cy == (frame_height - 1)) || (cy < (screen_height - 1)));
-					video_preamble <= ((cx >= (frame_width - 10)) && (cx < (frame_width - 2))) && ((cy == (frame_height - 1)) || (cy < (screen_height - 1)));
-					mode <= (video_data_period ? 3'd1 : (video_guard ? 3'd2 : 3'd0));
+					mode <= (video_data_period ? 3'd1 : 3'd0);
 					video_data <= rgb;
 					control_data <= {4'b0000, vsync, hsync};  // ctrl3, ctrl2, ctrl1, ctrl0, vsync, hsync
 				end
