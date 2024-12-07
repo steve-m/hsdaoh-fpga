@@ -280,6 +280,7 @@ module hdmi (
 		for (i = 0; i < NUM_CHANNELS; i = i + 1) begin : tmds_gen
 			tmds_channel #(.CN(i)) tmds_channel(
 				.clk_pixel(clk_pixel),
+				.reset(reset),
 				.video_data(video_data[(i * 8) + 7:i * 8]),
 				.data_island_data(data_island_data[(i * 4) + 3:i * 4]),
 				.control_data(control_data[(i * 2) + 1:i * 2]),
