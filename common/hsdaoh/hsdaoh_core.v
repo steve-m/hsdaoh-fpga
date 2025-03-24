@@ -14,8 +14,8 @@ module hsdaoh_core
 	input wire clk_pixel,
 	input wire fifo_empty,
 	input wire fifo_aempty,
-	output reg fifo_read_en,
-	input wire [15:0] data_in
+	output wire fifo_read_en,
+	input wire [23:0] data_in
 );
 
 	parameter USE_CRC = 1;
@@ -48,6 +48,13 @@ module hsdaoh_core
 	wire [11:0] screen_width;
 	wire [10:0] screen_height;
 
+	reg read_en;
+	reg [15:0] tenbit_data;
+	reg [2:0] pack_state;
+
+	// For 10 bit mode, disable FIFO every four 20 bit words so we can pack them to 16 bit
+	assign fifo_read_en = read_en && (pack_state != 1);
+
 always @(posedge clk_pixel) begin
 
 	if (cy < screen_height) begin
@@ -68,9 +75,29 @@ always @(posedge clk_pixel) begin
 			hdmi_data <= {last_line_crc, 8'h00};
 
 		end else if (cx < screen_width) begin
-			if (fifo_read_en && !fifo_empty) begin
+			if (read_en && !fifo_empty) begin
 				// regular output of FIFO data
-				hdmi_data <= {data_in[15:0], 8'h00};
+				hdmi_data <= (pack_state == 2) ? {tenbit_data[15:0], 8'h00} : {data_in[11:4], data_in[23:16],  8'h00};
+
+				// packing of 24 bit to 16 bit
+				case (pack_state)
+				0:
+					begin
+						tenbit_data[7:0] <= {data_in[15:12], data_in[3:0]};
+						pack_state <= 1;
+					end
+				1:
+					begin
+						tenbit_data[15:8] <= {data_in[15:12], data_in[3:0]};
+						pack_state <= 2;
+					end
+				2:
+					begin
+						pack_state <= 0;
+					end
+				default:
+					pack_state <= 0;
+				endcase
 
 				// increment line payload counter
 				line_word_cnt <= line_word_cnt + 1'b1;
@@ -79,7 +106,7 @@ always @(posedge clk_pixel) begin
 				hdmi_data <= {idle_counter[15:8], idle_counter[7:0], 8'h00};
 
 				// increment idle counter
-				idle_counter <= idle_counter + 1'b1;
+		//		idle_counter <= idle_counter + 1'b1;
 			end
 		end else
 			line_word_cnt <= 16'h0000;
@@ -87,22 +114,22 @@ always @(posedge clk_pixel) begin
 		// Enable reading before beginning of next line
 		if ((cx == frame_width-1) && (cy != screen_height-1)) begin
 			if (!fifo_empty)
-				fifo_read_en = 1'b1;
+				read_en = 1'b1;
 		end
 
 		// switch read off at end of line before sending the word counter
 		// -2 because the last word is reserved (line_word_cnt and metadata)
 		if (cx == screen_width-2-USE_CRC)
-			fifo_read_en = 1'b0;
+			read_en = 1'b0;
 	end
 
 	// switch read off during blanking
 	if (cy > screen_height)
-		fifo_read_en = 1'b0;
+		read_en = 1'b0;
 
 	// switch read off when FIFO has only one word remaining
 	if (fifo_aempty)
-		fifo_read_en = 1'b0;
+		read_en = 1'b0;
 
 	// increment the frame counter at the end of the frame
 	if ((cx == frame_width-1) && (cy == frame_height-1)) begin
@@ -111,7 +138,15 @@ always @(posedge clk_pixel) begin
 
 		// start FIFO readout
 		if (!fifo_empty)
-			fifo_read_en = 1'b1;
+			read_en = 1'b1;
+	end
+
+	// in order to align the packed data, stop the FIFO readout if we cannot complete a packing cycle
+	// at the end of the frame. This ensures that each frame starts with pack_state 0
+	// FIXME: only done at beginning of last line, should be removed
+	if ((cy == screen_height-1)  && read_en) begin
+		if (pack_state == 2)
+			read_en = 1'b0;
 	end
 
 	if (cx == 0) begin
@@ -129,6 +164,9 @@ always @(posedge clk_pixel) begin
 			10 : status_nibble <= frame_cnt[11:8];
 			11 : status_nibble <= frame_cnt[15:12];
 			14 : status_nibble <= { 3'b000, USE_CRC };
+			92 : status_nibble <= 4'b0010; // set format ID = FPGA_12BIT_DUAL
+			93 : status_nibble <= 4'b0001;
+			94 : status_nibble <= 4'b0001;
 			default : status_nibble <= 4'h0;
 		endcase
 	end
