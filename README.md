@@ -5,7 +5,13 @@ This repository contains the FPGA implementation and example designs for the Tan
 The example design generates a 16 bit counter, that then can be verified on the host. With a small modification to the clk_data process in the top-file of your respective FPGA board you can stream your own payload data.
 
 ## Building the desgin
-Currently, the bitfiles must be generated with the GOWIN IDE (V1.9.9 Beta-4 Education). See [here](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-Doc/install-the-ide.html) for more information on how to set up the IDE.
+Currently, the bitfiles must be generated with the GOWIN IDE (V1.9.11.03 Education). See [here](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-Doc/install-the-ide.html) for more information on how to set up the IDE.
+
+For launching on Arch Linux:
+
+    rm ./IDE/lib/libfreetype.so.6
+    LD_LIBRARY_PATH=./IDE/lib/ ./IDE/bin/gw_ide
+
 
 In the future, it might be possible to use the Open Source toolchain ([Yosys](https://github.com/YosysHQ/yosys) + [nextpnr-himbaechel](https://github.com/YosysHQ/nextpnr) + [apicula](https://github.com/YosysHQ/apicula)). This is currently blocked by the lack of the CLKDIV primitive
 in the Open Source tools.
